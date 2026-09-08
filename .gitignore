@@ -21,3 +21,4 @@ local.properties
 .idea/compiler.xml
 .idea/AndroidProjectSystem.xml
 /app/release
+/.idea

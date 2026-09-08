@@ -1,0 +1,8 @@
+<!-- res/drawable/bg_clock_rounded.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景颜色：你之前选的暖杏色 -->
+    <solid android:color="#C0000000" />
+
+    <!-- 圆角半径：可根据喜好调整（单位 dp） -->
+    <corners android:radius="6dp" />
+</shape>
