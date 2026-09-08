@@ -4,6 +4,8 @@ import android.content.ActivityNotFoundException;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -19,10 +21,15 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import com.qiko.tvweb.base.RxBaseActivity;
 import com.qiko.tvweb.databinding.ActivityMainBinding;
@@ -37,6 +44,10 @@ public class MainActivity extends RxBaseActivity {
     private WebView webView;
 
     private boolean observerInjected = false;
+    private TextView tvClock;
+    private Handler clockHandler;
+    private Runnable clockRunnable;
+    private SimpleDateFormat timeFormat;
 
     private void injectCloseLoginObserver() {
         if (observerInjected) return;
@@ -97,6 +108,8 @@ public class MainActivity extends RxBaseActivity {
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         );
         webView = mBinding.webView;
+        tvClock = mBinding.tvClock;
+        initClock();
         // 隐藏状态栏和导航栏
         getWindow().getDecorView().setSystemUiVisibility(
                 webView.SYSTEM_UI_FLAG_FULLSCREEN |
@@ -303,6 +316,41 @@ public class MainActivity extends RxBaseActivity {
         } else {
             super.onBackPressed();
             finish();
+        }
+    }
+
+    private void initClock() {
+        timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        clockHandler = new Handler(Looper.getMainLooper());
+        clockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (tvClock != null) {
+                    tvClock.setText(timeFormat.format(new Date()));
+                }
+                // Schedule next update at the start of next minute
+                long now = System.currentTimeMillis();
+                long delay = TimeUnit.MINUTES.toMillis(1) - (now % TimeUnit.MINUTES.toMillis(1));
+                clockHandler.postDelayed(this, delay);
+            }
+        };
+        // Start immediately
+        clockHandler.post(clockRunnable);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (clockHandler != null && clockRunnable != null) {
+            clockHandler.post(clockRunnable);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (clockHandler != null && clockRunnable != null) {
+            clockHandler.removeCallbacks(clockRunnable);
         }
     }
 }
